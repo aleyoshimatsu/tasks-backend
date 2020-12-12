@@ -3,10 +3,8 @@ pipeline {
 
     stages {
         stage ('Build Backend') {
-            steps {
-                withEnv(["JAVA_HOME=${ tool 'JDK 8' }", "PATH+MAVEN=${tool 'MVN 3.6.3'}/bin:${env.JAVA_HOME}/bin"]) {
-                    sh 'mvn clean package -DskipTests=true'
-                }
+            steps {                
+                sh 'mvn clean package -DskipTests=true'
             }
         }
         stage ('Unit Tests') {
