@@ -2,8 +2,17 @@ pipeline {
     agent any
     stages {
         stage ('Build Backend') {
-            steps {
-                sh 'mvn clean package -DskipTests=true'
+            steps {                
+
+                withMaven(
+                    maven: 'MVN 3.6.3',
+                    mavenLocalRepo: '.repository'
+                ) {
+
+                    sh 'mvn clean package -DskipTests=true'
+
+                }
+
             }
         }
         stage ('Unit Tests') {
