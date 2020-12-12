@@ -11,7 +11,9 @@ pipeline {
         }
         stage ('Unit Tests') {
             steps {
-                sh 'mvn test'
+                withEnv(["JAVA_HOME=${ tool 'JDK 8' }", "PATH+MAVEN=${tool 'MVN 3.6.3'}/bin:${env.JAVA_HOME}/bin"]) {
+                    sh 'mvn test'
+                }
             }
         }
         stage ('Sonar Analysis') {
@@ -19,8 +21,8 @@ pipeline {
                 scannerHome = tool 'SONAR_SCANNER'
             }
             steps {
-                withSonarQubeEnv('SONAR_LOCAL') {
-                    sh "${scannerHome}/bin/sonar-scanner -e -Dsonar.projectKey=DeployBack -Dsonar.host.url=http://localhost:9000 -Dsonar.login=cf6826d57f1e453e08ecbd6cf862496472061f66 -Dsonar.java.binaries=target -Dsonar.coverage.exclusions=**/.mvn/**,**/src/test/**,**/model/**,**Application.java"
+                withSonarQubeEnv('Sonar') {
+                    sh "${scannerHome}/bin/sonar-scanner -e -Dsonar.projectKey=DeployBack -Dsonar.host.url=http://sonarqube:9000 -Dsonar.login=cf6826d57f1e453e08ecbd6cf862496472061f66 -Dsonar.java.binaries=target -Dsonar.coverage.exclusions=**/.mvn/**,**/src/test/**,**/model/**,**Application.java"
                 }
             }
         }
@@ -34,31 +36,37 @@ pipeline {
         }
         stage ('Deploy Backend') {
             steps {
-                deploy adapters: [tomcat8(credentialsId: 'TomcatLogin', path: '', url: 'http://localhost:8001/')], contextPath: 'tasks-backend', war: 'target/tasks-backend.war'
+                deploy adapters: [tomcat8(credentialsId: 'admin', path: '', url: 'http://tomcat:8080/')], contextPath: 'tasks-backend', war: 'target/tasks-backend.war'
             }
         }
         stage ('API Test') {
             steps {
-                dir('api-test') {
-                    git credentialsId: 'github_login', url: 'https://github.com/wcaquino/tasks-api-test'
-                    sh 'mvn test'
+                withEnv(["JAVA_HOME=${ tool 'JDK 8' }", "PATH+MAVEN=${tool 'MVN 3.6.3'}/bin:${env.JAVA_HOME}/bin"]) {
+                    dir('api-test') {
+                        git credentialsId: 'SSH', url: 'https://github.com/aleyoshimatsu/tasks-api-test'
+                        sh 'mvn test'
+                    }
                 }
             }
         }
         stage ('Deploy Frontend') {
             steps {
-                dir('frontend') {
-                    git credentialsId: 'github_login', url: 'https://github.com/wcaquino/tasks-frontend'
-                    sh 'mvn clean package'
-                    deploy adapters: [tomcat8(credentialsId: 'TomcatLogin', path: '', url: 'http://localhost:8001/')], contextPath: 'tasks', war: 'target/tasks.war'
+                withEnv(["JAVA_HOME=${ tool 'JDK 8' }", "PATH+MAVEN=${tool 'MVN 3.6.3'}/bin:${env.JAVA_HOME}/bin"]) {
+                    dir('frontend') {
+                        git credentialsId: 'SSH', url: 'https://github.com/aleyoshimatsu/tasks-frontend'
+                        sh 'mvn clean package'
+                        deploy adapters: [tomcat8(credentialsId: 'admin', path: '', url: 'http://tomcat:8080/')], contextPath: 'tasks', war: 'target/tasks.war'
+                    }
                 }
             }
         }
         stage ('Functional Test') {
             steps {
-                dir('functional-test') {
-                    git credentialsId: 'github_login', url: 'https://github.com/wcaquino/tasks-functional-tests'
-                    sh 'mvn test'
+                withEnv(["JAVA_HOME=${ tool 'JDK 8' }", "PATH+MAVEN=${tool 'MVN 3.6.3'}/bin:${env.JAVA_HOME}/bin"]) {
+                    dir('functional-test') {
+                        git credentialsId: 'SSH', url: 'https://github.com/aleyoshimatsu/tasks-functional-tests'
+                        sh 'mvn test'
+                    }
                 }
             }
         }
@@ -70,9 +78,11 @@ pipeline {
         }
         stage ('Health Check') {
             steps {
-                sleep(5)
-                dir('functional-test') {
-                    sh 'mvn verify -Dskip.surefire.tests'
+                withEnv(["JAVA_HOME=${ tool 'JDK 8' }", "PATH+MAVEN=${tool 'MVN 3.6.3'}/bin:${env.JAVA_HOME}/bin"]) {
+                    sleep(5)
+                    dir('functional-test') {
+                        sh 'mvn verify -Dskip.surefire.tests'
+                    }
                 }
             }
         }
@@ -83,10 +93,10 @@ pipeline {
             archiveArtifacts artifacts: 'target/tasks-backend.war, frontend/target/tasks.war', onlyIfSuccessful: true
         }
         unsuccessful {
-            emailext attachLog: true, body: 'See the attached log below', subject: 'Build $BUILD_NUMBER has failed', to: 'wcaquino+jenkins@gmail.com'
+            emailext attachLog: true, body: 'See the attached log below', subject: 'Build $BUILD_NUMBER has failed', to: 'aleyoshimatsu+jenkins@gmail.com'
         }
         fixed {
-            emailext attachLog: true, body: 'See the attached log below', subject: 'Build is fine!!!', to: 'wcaquino+jenkins@gmail.com'
+            emailext attachLog: true, body: 'See the attached log below', subject: 'Build is fine!!!', to: 'aleyoshimatsu+jenkins@gmail.com'
         }
     }
 
