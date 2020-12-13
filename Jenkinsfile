@@ -70,12 +70,6 @@ pipeline {
                 }
             }
         }
-        stage('Deploy Prod') {
-            steps {
-                sh 'docker-compose build'
-                sh 'docker-compose up -d'
-            }
-        }
         stage ('Health Check') {
             steps {
                 withEnv(["JAVA_HOME=${ tool 'JDK 8' }", "PATH+MAVEN=${tool 'MVN 3.6.3'}/bin:${env.JAVA_HOME}/bin"]) {
