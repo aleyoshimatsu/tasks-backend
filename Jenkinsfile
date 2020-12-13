@@ -43,7 +43,7 @@ pipeline {
             steps {
                 withEnv(["JAVA_HOME=${ tool 'JDK 8' }", "PATH+MAVEN=${tool 'MVN 3.6.3'}/bin:${env.JAVA_HOME}/bin"]) {
                     dir('api-test') {
-                        git credentialsId: 'SSH', url: 'https://github.com/aleyoshimatsu/tasks-api-test'
+                        git credentialsId: 'github_ssh', url: 'https://github.com/aleyoshimatsu/tasks-backend-test'
                         sh 'mvn test'
                     }
                 }
@@ -53,7 +53,7 @@ pipeline {
             steps {
                 withEnv(["JAVA_HOME=${ tool 'JDK 8' }", "PATH+MAVEN=${tool 'MVN 3.6.3'}/bin:${env.JAVA_HOME}/bin"]) {
                     dir('frontend') {
-                        git credentialsId: 'SSH', url: 'https://github.com/aleyoshimatsu/tasks-frontend'
+                        git credentialsId: 'github_ssh', url: 'https://github.com/aleyoshimatsu/tasks-frontend'
                         sh 'mvn clean package'
                         deploy adapters: [tomcat8(credentialsId: 'admin', path: '', url: 'http://tomcat:8080/')], contextPath: 'tasks', war: 'target/tasks.war'
                     }
@@ -64,7 +64,7 @@ pipeline {
             steps {
                 withEnv(["JAVA_HOME=${ tool 'JDK 8' }", "PATH+MAVEN=${tool 'MVN 3.6.3'}/bin:${env.JAVA_HOME}/bin"]) {
                     dir('functional-test') {
-                        git credentialsId: 'SSH', url: 'https://github.com/aleyoshimatsu/tasks-functional-tests'
+                        git credentialsId: 'github_ssh', url: 'https://github.com/aleyoshimatsu/tasks-functional-tests'
                         sh 'mvn test'
                     }
                 }
