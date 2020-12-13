@@ -64,7 +64,7 @@ pipeline {
             steps {
                 withEnv(["JAVA_HOME=${ tool 'JDK 8' }", "PATH+MAVEN=${tool 'MVN 3.6.3'}/bin:${env.JAVA_HOME}/bin"]) {
                     dir('functional-test') {
-                        git credentialsId: 'github_ssh', url: 'https://github.com/aleyoshimatsu/tasks-functional-tests'
+                        git credentialsId: 'github_ssh', url: 'https://github.com/aleyoshimatsu/tasks-functional-test'
                         sh 'mvn test'
                     }
                 }
